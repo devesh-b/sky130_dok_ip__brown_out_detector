@@ -1,0 +1,369 @@
+#--------------------------------------------------------------
+# CACE circuit characterization file
+#--------------------------------------------------------------
+
+name:		sky130_dok_ip__brown_out_detector
+description:	Brown-Out Detector Circuit
+commit:		N/A
+PDK:		sky130A
+
+cace_format:	4.0
+
+authorship {
+	designer:	Devesh Bhaskaran
+	company:	PES University
+	creation_date:	March 22, 2024
+	license:	Apache 2.0
+}
+
+# Paths to various files
+
+paths {
+	root:		..
+	documentation:	doc
+	schematic:	xschem
+	magic:		mag
+	layout:		gds
+	netlist:	netlist
+	testbench:	cace
+	simulation:	ngspice
+        reports:	reports
+	plots:		plots
+	logs:		ngspice/log
+}
+
+# Project dependencies
+
+dependencies {
+	name:		sky130_dok_ip__brown_out_detector
+	path:		..
+	repository:	https://github.com/devesh-b/sky130_dok_ip__brown_out_detector.git
+	commit:		N/A
+}
+
+# Pin names and descriptions
+
+pins {
+	name:		ENA_B
+	description:	Enable input (active low)
+	type:		digital
+	direction:	input
+	Vmin:		AVSS - 0.3
+	Vmax:		AVDD + 0.3
+
+ 	+
+	name:		OUT
+	description:	Brown Out Alarm output
+	type:		signal
+	direction:	output
+	Vmin:		DVSS
+	Vmax:		DVDD
+
+ 	+
+	name:		AVDD
+	description:	Analog power supply
+	type:		power
+	direction:	input
+	Vmin:		3.0
+	Vmax:		3.6
+
+ 	+
+	name:		AVSS
+	description:	Analog ground
+	type:		ground
+	direction:	input
+	Vmin:		-0.3
+	Vmax:		0.3
+	
+	+
+	name:		DVDD
+	description:	Digital power supply
+	type:		power
+	direction:	input
+	Vmin:		1.5
+	Vmax:		2.1
+
+ 	+
+	name:		DVSS
+	description:	Digital ground
+	type:		ground
+	direction:	input
+	Vmin:		-0.3
+	Vmax:		0.3
+}
+
+# Default values for electrical parameter measurement conditions
+# if not otherwise specified
+
+default_conditions {
+	name:		AVDD
+	description:	Analog power supply voltage
+	display:	vdd
+	unit:		V
+	typical:	3.3
+
+	+
+	name:		AVSS
+	description:	Analog ground
+	display:	vss
+	unit:		V
+	typical:	0
+
+	+
+	name:		DVDD
+	description:	Digital power supply voltage
+	display:	dvdd
+	unit:		V
+	typical:	1.8
+
+	+
+	name:		Cout
+	description:	Output load capacitance
+	display:	CLoad
+	unit:		fF
+	maximum:	100
+
+	+
+	name:		ena
+	description:	Amplifier enable
+	display:	ena
+	typical:	0
+
+	+
+	name:		temperature
+	description:	Ambient temperature
+	display:	Temp
+	unit:		{degrees}C
+	minimum:	-40
+	typical:	27
+	maximum:	130
+
+	+
+	name:		corner
+	description:	Process corner
+	display:	Corner
+	minimum:	ss
+	typical:	tt
+	maximum:	ff
+
+	+
+	name:		iterations
+	description:	Iterations to run
+	display:	Iterations
+	minimum:	1
+	maximum:	10
+	step:		linear
+	stepsize:	1
+}
+
+# List of electrical parameters to be measured and their specified limits
+
+electrical_parameters {
+	name:		Idd_enabled
+	description:	Current draw through analog supply
+	display:	Itotal
+	unit: 		{micro}A
+	spec {
+		minimum:	any
+		typical:	5
+		maximum:	10	fail
+	}
+	simulate {
+		tool:		ngspice
+		template:	dccurrent_vdd.spice
+		format:		ascii .data null result
+	}
+	conditions {
+		name: AVDD
+		typical: 3.0
+		
+		+
+		name: DVDD
+		typical: 1.8
+		
+
+		+
+		name: temperature
+		typical: 27
+
+		+
+		name: corner
+		typical: tt
+	}
+
+	+
+	name:		Vol
+	status:		skip
+	description:	Output voltage low
+	display:	Output voltage low (Vol)
+	unit:		V
+	spec {
+		maximum:	0.3	fail
+		typical:	0.1
+	}
+	simulate {
+		tool:		ngspice
+		template:	voltage_out.spice
+		format:		ascii .data result
+	}
+	conditions {
+		name: AVDD
+		typical: 3.3
+
+		+
+		name: DVDD
+		typical: 1.8
+		
+		+
+		name: ENA_B
+		typical: 0
+
+		+
+		name: temperature
+		maximum: 110
+		typical: 27
+		minimum: -40
+
+		+
+		name: corner
+		minimum: ss
+		typical: tt
+		maximum: ff
+	}
+
+	+
+	name:		Voh
+	status:		skip
+	description:	Output voltage high
+	display:	Output voltage high (Voh)
+	unit:		V
+	spec {
+		minimum:	1.6	fail
+		typical:	1.8
+	}
+	simulate {
+		tool:		ngspice
+		template:	voltage_out.spice
+		format:		ascii .data result
+	}
+	conditions {
+		name: AVDD
+		typical: 3.3
+
+		+
+		name: DVDD
+		typical: 1.8
+		
+		+
+		name: ENA_B
+		typical: 0
+
+		+
+		name: temperature
+		maximum: 110
+		typical: 27
+		minimum: -40
+
+		+
+		name: corner
+		minimum: ss
+		typical: tt
+		maximum: ff
+	}
+	
+	+
+	name:		slewrate_rise
+	status:		skip
+	description:	Slew Rate Risetime
+	display:	Slew Rate Risetime
+	unit:		V/{micro}s
+	spec {
+		minimum:	10	fail
+		typical:	20
+		maximum:	50	fail	maximum-above
+	}
+	simulate {
+		tool:		ngspice
+		template:	slew_rise.spice
+		format:		ascii .data result null
+	}
+	conditions {
+		name: AVDD
+		typical: 3.3
+
+		+
+		name: DVDD
+		typical: 1.8
+		
+		+
+		name: ENA_B
+		typical: 0
+
+		+
+		name: temperature
+		maximum: 110
+		typical: 27
+		minimum: -40
+
+		+
+		name: corner
+		minimum: ss
+		typical: tt
+		maximum: ff
+	}
+	
+	+
+	name:		transient_response
+	status:		skip
+	description:	Large signal transient response
+	display:	Large signal transient response
+	unit:		V
+	simulate {
+		tool:		ngspice
+		template:	transient.spice
+		format:		ascii .data time result Vinp
+	}
+	plot {
+		filename: transient.png
+		xaxis: time
+		yaxis: OUT
+	}
+	variables {
+		name: time
+		display: Time
+		unit: ms
+
+		+
+		name: ENA_B
+		display: Vinp
+		unit: V
+
+		+
+		name: OUT
+		display: Vout
+		unit: V
+	}
+	conditions {
+		name: AVDD
+		typical: 3.3
+
+		+
+		name: Tmax
+		display: Simulation time
+		unit: ms
+		typical: 400
+		
+		+
+		name: DVDD
+		typical: 1.8
+		
+		+
+		name: temperature
+		typical: 27
+
+		+
+		name: corner
+		typical: tt
+	}
+}
+
